@@ -31,8 +31,9 @@ class FashionMNIST_Dataset(TorchvisionDataset):
 
         # FashionMNIST preprocessing: feature scaling to [0, 1]
         transform = transforms.ToTensor()
-        target_transform = transforms.Lambda(lambda x: int(x in self.outlier_classes))
-
+        target_transform = transforms.Compose([transforms.Lambda(lambda x: int(x in self.outlier_classes), 
+                                                                 transforms.ToTensor())
+                        ])
         # Get train set
         train_set = MyFashionMNIST(root=self.root, train=True, transform=transform, target_transform=target_transform,
                                    download=True)

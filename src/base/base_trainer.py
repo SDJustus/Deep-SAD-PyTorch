@@ -17,6 +17,7 @@ class BaseTrainer(ABC):
         self.weight_decay = weight_decay
         self.device = device
         self.n_jobs_dataloader = n_jobs_dataloader
+        
 
     @abstractmethod
     def train(self, dataset: BaseADDataset, net: BaseNet) -> BaseNet:

@@ -5,6 +5,7 @@ from .preprocessing import create_semisupervised_setting
 from base.base_dataset import BaseADDataset
 from torch.utils.data import DataLoader
 from torchvision.datasets import DatasetFolder
+import numpy as np
 
 import torch
 import torchvision.transforms as transforms
@@ -12,7 +13,7 @@ import torchvision.transforms as transforms
 IMG_EXTENSIONS = ('.jpg', '.jpeg', '.png', '.ppm', '.bmp', '.pgm', '.tif', '.tiff', '.webp')
 class Custom_Dataset(BaseADDataset):
 
-    def __init__(self, root: str, ratio_known_normal: float = 0.0, ratio_known_outlier: float = 0.0, ratio_pollution: float = 0.0):
+    def __init__(self, root: str):
         super().__init__(root)
 
         # Define normal and outlier classes
@@ -23,22 +24,21 @@ class Custom_Dataset(BaseADDataset):
         self.known_outlier_classes = (1,)
             
         transform = transforms.ToTensor()
-        target_transform = transforms.Lambda(lambda x: int(x in self.outlier_classes))
 
         # Get train set
-        train_set = CustomDataset(root=self.root+"/train", transform=transform, target_transform=target_transform)
-
+        self.train_set = CustomDataset(root=self.root+"/train", transform=transform)
         # Create semi-supervised setting
-        idx, _, semi_targets = create_semisupervised_setting(train_set.targets.cpu().data.numpy(), self.normal_classes,
-                                                             self.outlier_classes, self.known_outlier_classes,
-                                                             ratio_known_normal, ratio_known_outlier, ratio_pollution)
-        train_set.semi_targets[idx] = torch.tensor(semi_targets)  # set respective semi-supervised labels
+        #idx, _, semi_targets = create_semisupervised_setting(np.array(train_set.targets), self.normal_classes,
+        #                                                     self.outlier_classes, self.known_outlier_classes,
+        #                                                     ratio_known_normal, ratio_known_outlier, ratio_pollution)
+        #train_set.semi_targets = torch.tensor(train_set.targets)  # set respective semi-supervised labels
 
         # Subset train_set to semi-supervised setup
-        self.train_set = Subset(train_set, idx)
+        #self.train_set = Subset(train_set, idx)
+        
 
         # Get test set
-        self.test_set = CustomDataset(root=self.root+"/test", transform=transform, target_transform=target_transform)
+        self.test_set = CustomDataset(root=self.root+"/test", transform=transform)
         
     def loaders(self, batch_size: int, shuffle_train=True, shuffle_test=False, num_workers: int = 0) -> (DataLoader, DataLoader):
         train_loader = DataLoader(dataset=self.train_set, batch_size=batch_size, shuffle=shuffle_train,
@@ -63,6 +63,7 @@ class CustomDataset(DatasetFolder):
                                           target_transform=target_transform,
                                           is_valid_file=is_valid_file)
         self.imgs = self.samples
+        self.semi_targets = torch.tensor(self.targets)
 
     def __getitem__(self, index: int) -> Tuple[Any, Any, Any, int]:
         """
@@ -79,7 +80,7 @@ class CustomDataset(DatasetFolder):
         if self.target_transform is not None:
             target = self.target_transform(target)
 
-        return img, target, int(torch.zeros_like(self.targets)[index]), index
+        return img, target, self.semi_targets[index], index
 
 
     def __len__(self) -> int:

@@ -24,7 +24,7 @@ class DeepSAD(object):
         ae_results: A dictionary to save the autoencoder results.
     """
 
-    def __init__(self, eta: float = 1.0):
+    def __init__(self, eta: float = 1.0, img_size=256, display_freq=50):
         """Inits DeepSAD with hyperparameter eta."""
 
         self.eta = eta
@@ -39,6 +39,9 @@ class DeepSAD(object):
         self.ae_net = None  # autoencoder network for pretraining
         self.ae_trainer = None
         self.ae_optimizer_name = None
+        print("in deepSAD init", img_size)
+        self.img_size = img_size
+        self.display_freq = display_freq
 
         self.results = {
             'train_time': None,
@@ -56,7 +59,9 @@ class DeepSAD(object):
     def set_network(self, net_name):
         """Builds the neural network phi."""
         self.net_name = net_name
-        self.net = build_network(net_name)
+        self.net = build_network(net_name, img_size=self.img_size)
+        print(self.img_size)
+        print("here1:",self.net.img_size)
 
     def train(self, dataset: BaseADDataset, optimizer_name: str = 'adam', lr: float = 0.001, n_epochs: int = 50,
               lr_milestones: tuple = (), batch_size: int = 128, weight_decay: float = 1e-6, device: str = 'cuda',
@@ -66,8 +71,9 @@ class DeepSAD(object):
         self.optimizer_name = optimizer_name
         self.trainer = DeepSADTrainer(self.c, self.eta, optimizer_name=optimizer_name, lr=lr, n_epochs=n_epochs,
                                       lr_milestones=lr_milestones, batch_size=batch_size, weight_decay=weight_decay,
-                                      device=device, n_jobs_dataloader=n_jobs_dataloader)
+                                      device=device, n_jobs_dataloader=n_jobs_dataloader, display_freq=self.display_freq)
         # Get the model
+        print("here2:", self.net.img_size)
         self.net = self.trainer.train(dataset, self.net)
         self.results['train_time'] = self.trainer.train_time
         self.c = self.trainer.c.cpu().data.numpy().tolist()  # get as list
@@ -77,7 +83,7 @@ class DeepSAD(object):
 
         if self.trainer is None:
             self.trainer = DeepSADTrainer(self.c, self.eta, device=device, n_jobs_dataloader=n_jobs_dataloader)
-
+            
         self.trainer.test(dataset, self.net)
 
         # Get results
@@ -87,17 +93,18 @@ class DeepSAD(object):
 
     def pretrain(self, dataset: BaseADDataset, optimizer_name: str = 'adam', lr: float = 0.001, n_epochs: int = 100,
                  lr_milestones: tuple = (), batch_size: int = 128, weight_decay: float = 1e-6, device: str = 'cuda',
-                 n_jobs_dataloader: int = 0):
+                 n_jobs_dataloader: int = 0, img_size: int=None):
         """Pretrains the weights for the Deep SAD network phi via autoencoder."""
 
         # Set autoencoder network
-        self.ae_net = build_autoencoder(self.net_name)
+        self.ae_net = build_autoencoder(self.net_name, img_size=img_size)
+        print(self.ae_net)
 
         # Train
         self.ae_optimizer_name = optimizer_name
         self.ae_trainer = AETrainer(optimizer_name, lr=lr, n_epochs=n_epochs, lr_milestones=lr_milestones,
                                     batch_size=batch_size, weight_decay=weight_decay, device=device,
-                                    n_jobs_dataloader=n_jobs_dataloader)
+                                    n_jobs_dataloader=n_jobs_dataloader, display_freq=self.display_freq)
         self.ae_net = self.ae_trainer.train(dataset, self.ae_net)
 
         # Get train results

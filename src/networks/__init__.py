@@ -2,6 +2,8 @@ from .main import build_network, build_autoencoder
 from .mnist_LeNet import MNIST_LeNet, MNIST_LeNet_Decoder, MNIST_LeNet_Autoencoder
 from .fmnist_LeNet import FashionMNIST_LeNet, FashionMNIST_LeNet_Decoder, FashionMNIST_LeNet_Autoencoder
 from .cifar10_LeNet import CIFAR10_LeNet, CIFAR10_LeNet_Decoder, CIFAR10_LeNet_Autoencoder
+from .custom_LeNet import Custom_LeNet, Custom_LeNet_Decoder, Custom_LeNet_Autoencoder
+
 from .mlp import MLP, MLP_Decoder, MLP_Autoencoder
 from .layers.stochastic import GaussianSample
 from .layers.standard import Standardize

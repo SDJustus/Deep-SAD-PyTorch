@@ -15,16 +15,17 @@ from datasets.main import load_dataset
 ################################################################################
 @click.command()
 @click.argument('dataset_name', type=click.Choice(['mnist', 'fmnist', 'cifar10', 'arrhythmia', 'cardio', 'satellite',
-                                                   'satimage-2', 'shuttle', 'thyroid']))
+                                                   'satimage-2', 'shuttle', 'thyroid', 'custom']))
 @click.argument('net_name', type=click.Choice(['mnist_LeNet', 'fmnist_LeNet', 'cifar10_LeNet', 'arrhythmia_mlp',
                                                'cardio_mlp', 'satellite_mlp', 'satimage-2_mlp', 'shuttle_mlp',
-                                               'thyroid_mlp']))
+                                               'thyroid_mlp', 'custom_LeNet']))
 @click.argument('xp_path', type=click.Path(exists=True))
 @click.argument('data_path', type=click.Path(exists=True))
 @click.option('--load_config', type=click.Path(exists=True), default=None,
               help='Config JSON-file path (default: None).')
 @click.option('--load_model', type=click.Path(exists=True), default=None,
               help='Model file path (default: None).')
+
 @click.option('--eta', type=float, default=1.0, help='Deep SAD hyperparameter eta (must be 0 < eta).')
 @click.option('--ratio_known_normal', type=float, default=0.0,
               help='Ratio of known (labeled) normal training examples.')
@@ -56,6 +57,8 @@ from datasets.main import load_dataset
 @click.option('--ae_batch_size', type=int, default=128, help='Batch size for mini-batch autoencoder training.')
 @click.option('--ae_weight_decay', type=float, default=1e-6,
               help='Weight decay (L2 penalty) hyperparameter for autoencoder objective.')
+@click.option('--display_freq', type=int, default=50,
+              help='Frequency when images should be plotted at tensorboard')
 @click.option('--num_threads', type=int, default=0,
               help='Number of threads used for parallelizing CPU operations. 0 means that all resources are used.')
 @click.option('--n_jobs_dataloader', type=int, default=0,
@@ -69,11 +72,14 @@ from datasets.main import load_dataset
                    'If 0, no anomalies are known.'
                    'If 1, outlier class as specified in --known_outlier_class option.'
                    'If > 1, the specified number of outlier classes will be sampled at random.')
+@click.option('--img_size', type=int, default=256,
+              help='Image size. i.e. --img_size 256 results in 256x256')
 def main(dataset_name, net_name, xp_path, data_path, load_config, load_model, eta,
          ratio_known_normal, ratio_known_outlier, ratio_pollution, device, seed,
          optimizer_name, lr, n_epochs, lr_milestone, batch_size, weight_decay,
          pretrain, ae_optimizer_name, ae_lr, ae_n_epochs, ae_lr_milestone, ae_batch_size, ae_weight_decay,
-         num_threads, n_jobs_dataloader, normal_class, known_outlier_class, n_known_outlier_classes):
+         num_threads, n_jobs_dataloader, normal_class, known_outlier_class, n_known_outlier_classes, img_size,
+         display_freq):
     """
     Deep SAD, a method for deep semi-supervised anomaly detection.
 
@@ -150,7 +156,7 @@ def main(dataset_name, net_name, xp_path, data_path, load_config, load_model, et
         logger.info('Known anomaly classes: %s' % (dataset.known_outlier_classes,))
 
     # Initialize DeepSAD model and set neural network phi
-    deepSAD = DeepSAD(cfg.settings['eta'])
+    deepSAD = DeepSAD(cfg.settings['eta'], img_size=cfg.settings["img_size"], display_freq=cfg.settings["display_freq"])
     deepSAD.set_network(net_name)
 
     # If specified, load Deep SAD model (center c, network weights, and possibly autoencoder weights)
@@ -177,7 +183,7 @@ def main(dataset_name, net_name, xp_path, data_path, load_config, load_model, et
                          batch_size=cfg.settings['ae_batch_size'],
                          weight_decay=cfg.settings['ae_weight_decay'],
                          device=device,
-                         n_jobs_dataloader=n_jobs_dataloader)
+                         n_jobs_dataloader=n_jobs_dataloader, img_size=cfg.settings["img_size"])
 
         # Save pretraining results
         deepSAD.save_ae_results(export_json=xp_path + '/ae_results.json')

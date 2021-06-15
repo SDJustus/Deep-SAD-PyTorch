@@ -28,7 +28,7 @@ def create_semisupervised_setting(labels, normal_classes, outlier_classes, known
                   [0, -ratio_pollution, (1-ratio_pollution), 0]])
     b = np.array([n_normal, 0, 0, 0])
     x = np.linalg.solve(a, b)
-
+    print(x)
     # Get number of samples
     n_known_normal = int(x[0])
     n_unlabeled_normal = int(x[1])
@@ -55,6 +55,7 @@ def create_semisupervised_setting(labels, normal_classes, outlier_classes, known
     semi_labels_known_normal = np.ones(n_known_normal).astype(np.int32).tolist()
     semi_labels_unlabeled_normal = np.zeros(n_unlabeled_normal).astype(np.int32).tolist()
     semi_labels_unlabeled_outlier = np.zeros(n_unlabeled_outlier).astype(np.int32).tolist()
+    
     semi_labels_known_outlier = (-np.ones(n_known_outlier).astype(np.int32)).tolist()
 
     # Create final lists

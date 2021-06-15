@@ -1,12 +1,13 @@
 from .mnist_LeNet import MNIST_LeNet, MNIST_LeNet_Autoencoder
 from .fmnist_LeNet import FashionMNIST_LeNet, FashionMNIST_LeNet_Autoencoder
 from .cifar10_LeNet import CIFAR10_LeNet, CIFAR10_LeNet_Autoencoder
+from .custom_LeNet import Custom_LeNet, Custom_LeNet_Autoencoder
 from .mlp import MLP, MLP_Autoencoder
 from .vae import VariationalAutoencoder
 from .dgm import DeepGenerativeModel, StackedDeepGenerativeModel
 
 
-def build_network(net_name, ae_net=None):
+def build_network(net_name, ae_net=None, img_size=None):
     """Builds the neural network."""
 
     implemented_networks = ('mnist_LeNet', 'mnist_DGM_M2', 'mnist_DGM_M1M2',
@@ -15,7 +16,8 @@ def build_network(net_name, ae_net=None):
                             'arrhythmia_mlp', 'cardio_mlp', 'satellite_mlp', 'satimage-2_mlp', 'shuttle_mlp',
                             'thyroid_mlp',
                             'arrhythmia_DGM_M2', 'cardio_DGM_M2', 'satellite_DGM_M2', 'satimage-2_DGM_M2',
-                            'shuttle_DGM_M2', 'thyroid_DGM_M2')
+                            'shuttle_DGM_M2', 'thyroid_DGM_M2', 
+                            'custom_LeNet')
     assert net_name in implemented_networks
 
     net = None
@@ -40,6 +42,9 @@ def build_network(net_name, ae_net=None):
 
     if net_name == 'cifar10_LeNet':
         net = CIFAR10_LeNet()
+        
+    if net_name == 'custom_LeNet':
+        net = Custom_LeNet(img_size=img_size)
 
     if net_name == 'cifar10_DGM_M2':
         net = DeepGenerativeModel([3*32*32, 2, 128, [512, 256]], classifier_net=CIFAR10_LeNet)
@@ -82,18 +87,19 @@ def build_network(net_name, ae_net=None):
 
     if net_name == 'thyroid_DGM_M2':
         net = DeepGenerativeModel([6, 2, 4, [32, 16]])
+    
 
     return net
 
 
-def build_autoencoder(net_name):
+def build_autoencoder(net_name, img_size=None):
     """Builds the corresponding autoencoder network."""
 
     implemented_networks = ('mnist_LeNet', 'mnist_DGM_M1M2',
                             'fmnist_LeNet', 'fmnist_DGM_M1M2',
                             'cifar10_LeNet', 'cifar10_DGM_M1M2',
                             'arrhythmia_mlp', 'cardio_mlp', 'satellite_mlp', 'satimage-2_mlp', 'shuttle_mlp',
-                            'thyroid_mlp')
+                            'thyroid_mlp', 'custom_LeNet')
 
     assert net_name in implemented_networks
 
@@ -107,6 +113,9 @@ def build_autoencoder(net_name):
 
     if net_name == 'fmnist_LeNet':
         ae_net = FashionMNIST_LeNet_Autoencoder()
+    
+    if net_name == 'custom_LeNet':
+        ae_net = Custom_LeNet_Autoencoder(img_size=img_size)
 
     if net_name == 'fmnist_DGM_M1M2':
         ae_net = VariationalAutoencoder([1*28*28, 64, [256, 128]])
