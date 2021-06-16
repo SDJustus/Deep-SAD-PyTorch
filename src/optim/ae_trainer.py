@@ -51,7 +51,7 @@ class AETrainer(BaseTrainer):
         # Training
         logger.info('Starting pretraining...')
         start_time = time.time()
-        ae_net.train()
+        
         for epoch in range(self.n_epochs):
 
             if epoch in self.lr_milestones:
@@ -60,45 +60,54 @@ class AETrainer(BaseTrainer):
             epoch_loss = 0.0
             n_batches = 0
             epoch_start_time = time.time()
-            with tqdm(train_loader, unit="batch") as tepoch:
-                for data in tepoch:
-                    tepoch.set_description(f"Epoch {epoch}")
-                    inputs, _, _, _ = data
-                    inputs = inputs.to(self.device)
+            self.train_one_epoch(ae_net, logger, train_loader, criterion, optimizer, scheduler, start_time, epoch, n_batches, epoch_start_time, epoch_loss)
+            self.test()
+        
+        return ae_net
+
+    def train_one_epoch(self, ae_net, logger, train_loader, criterion, optimizer, scheduler, start_time, epoch, n_batches, epoch_start_time, epoch_loss):
+        ae_net.train()
+        with tqdm(train_loader, unit="batch") as tepoch:
+            for data in tepoch:
+                tepoch.set_description(f"Epoch {epoch}")
+                inputs, _, _, _ = data
+                inputs = inputs.to(self.device)
 
                     # Zero the network parameter gradients
-                    optimizer.zero_grad()
+                optimizer.zero_grad()
 
                     # Update network parameters via backpropagation: forward + backward + optimize
-                    rec = ae_net(inputs)
-                    if n_batches % self.display_freq:
-                        self.visualizer.plot_current_images(inputs, train_or_test="train_ae_inputs", global_step=(1+epoch)*n_batches)
-                        self.visualizer.plot_current_images(rec, train_or_test="train_ae_recs", global_step=(1+epoch)*n_batches)
+                rec = ae_net(inputs)
+                if n_batches % self.display_freq:
+                    self.visualizer.plot_current_images(inputs, train_or_test="train_ae_inputs", global_step=(1+epoch)*n_batches)
+                    self.visualizer.plot_current_images(rec, train_or_test="train_ae_recs", global_step=(1+epoch)*n_batches)
                         
-                    rec_loss = criterion(rec, inputs)
+                rec_loss = criterion(rec, inputs)
                     
-                    loss = torch.mean(rec_loss)
+                loss = torch.mean(rec_loss)
                     
-                    loss.backward()
-                    optimizer.step()
-                    scheduler.step()
-                    tepoch.set_postfix(loss=loss.item())
-                    epoch_loss += loss.item()
-                    self.visualizer.plot_current_errors(total_steps=(1+epoch)*n_batches, errors={"Loss": epoch_loss})
-                    n_batches += 1
+                loss.backward()
+                optimizer.step()
+                scheduler.step()
+                tepoch.set_postfix(loss=loss.item())
+                epoch_loss += loss.item()
+                self.visualizer.plot_current_errors(total_steps=(1+epoch)*n_batches, errors={"Loss": epoch_loss})
+                n_batches += 1
 
             # log epoch statistics
-            epoch_train_time = time.time() - epoch_start_time
-            logger.info(f'| Epoch: {epoch + 1:03}/{self.n_epochs:03} | Train Time: {epoch_train_time:.3f}s '
+        epoch_train_time = time.time() - epoch_start_time
+        logger.info(f'| Epoch: {epoch + 1:03}/{self.n_epochs:03} | Train Time: {epoch_train_time:.3f}s '
                         f'| Train Loss: {epoch_loss / n_batches:.6f} |')
 
         self.train_time = time.time() - start_time
         logger.info('Pretraining Time: {:.3f}s'.format(self.train_time))
-        logger.info('Finished pretraining.')
+        logger.info('Finished pretraining epoch {}.'.format(str(epoch)))
 
-        return ae_net
+        
 
-    def test(self, dataset: BaseADDataset, ae_net: BaseNet):
+    def test(self, dataset: BaseADDataset, ae_net: BaseNet, epoch=None):
+        if not epoch:
+            epoch = self.n_epochs+1
         logger = logging.getLogger()
 
         # Get test data loader
@@ -127,8 +136,8 @@ class AETrainer(BaseTrainer):
 
                     rec = ae_net(inputs)
                     if n_batches % self.display_freq:
-                        self.visualizer.plot_current_images(inputs, train_or_test="test_ae_inputs", global_step=n_batches)
-                        self.visualizer.plot_current_images(rec, train_or_test="test_ae_recs", global_step=n_batches)
+                        self.visualizer.plot_current_images(inputs, train_or_test="test_ae_inputs", global_step=(1+epoch)*n_batches)
+                        self.visualizer.plot_current_images(rec, train_or_test="test_ae_recs", global_step=(1+epoch)*n_batches)
                     rec_loss = criterion(rec, inputs)
                     scores = torch.mean(rec_loss, dim=tuple(range(1, rec.dim())))
 
@@ -150,7 +159,7 @@ class AETrainer(BaseTrainer):
         print("labels:", labels)
         print("scores:", scores)
         self.test_auc = roc_auc_score(labels, scores)
-        self.visualizer.plot_performance(epoch=1, performance=get_performance(y_trues=labels, y_preds=scores))
+        self.visualizer.plot_performance(epoch=epoch, performance=get_performance(y_trues=labels, y_preds=scores))
 
         # Log results
         logger.info('Test Loss: {:.6f}'.format(epoch_loss / n_batches))

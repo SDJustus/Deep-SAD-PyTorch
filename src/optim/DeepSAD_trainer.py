@@ -64,7 +64,7 @@ class DeepSADTrainer(BaseTrainer):
         # Training
         logger.info('Starting training...')
         start_time = time.time()
-        net.train()
+        
         for epoch in range(self.n_epochs):
             if epoch in self.lr_milestones:
                 logger.info('  LR scheduler: new learning rate is %g' % float(scheduler.get_lr()[0]))
@@ -72,45 +72,50 @@ class DeepSADTrainer(BaseTrainer):
             epoch_loss = 0.0
             n_batches = 0
             epoch_start_time = time.time()
-            with tqdm(train_loader, unit="batch") as tepoch:
-                for data in tepoch:
-                    tepoch.set_description(f"Epoch {epoch}")
-                    inputs, _, semi_targets, _ = data
-                    inputs, semi_targets = inputs.to(self.device), semi_targets.to(self.device)
+            self.train_one_epoch(net, logger, train_loader, optimizer, scheduler, start_time, epoch, n_batches, epoch_start_time, epoch_loss)
+            self.test(dataset, net, epoch)
+        
+
+        return net
+
+    def train_one_epoch(self, net, logger, train_loader, optimizer, scheduler, start_time, epoch, n_batches, epoch_start_time, epoch_loss):
+        net.train()
+        with tqdm(train_loader, unit="batch") as tepoch:
+            for data in tepoch:
+                tepoch.set_description(f"Epoch {epoch}")
+                inputs, _, semi_targets, _ = data
+                inputs, semi_targets = inputs.to(self.device), semi_targets.to(self.device)
 
                     # Zero the network parameter gradients
-                    optimizer.zero_grad()
+                optimizer.zero_grad()
 
                     # Update network parameters via backpropagation: forward + backward + optimize
-                    outputs = net(inputs)
-                    dist = torch.sum((outputs - self.c) ** 2, dim=1)
-                    losses = torch.where(semi_targets == 0, dist, self.eta * ((dist + self.eps) ** semi_targets.float()))
-                    loss = torch.mean(losses)
-                    loss.backward()
-                    optimizer.step()
-                    scheduler.step()
-                    tepoch.set_postfix(loss=loss.item())
-                    epoch_loss += loss.item()
-                    self.visualizer.plot_current_errors(total_steps=(1+epoch)*n_batches, errors={"Loss": epoch_loss})
-                    n_batches += 1
+                outputs = net(inputs)
+                dist = torch.sum((outputs - self.c) ** 2, dim=1)
+                losses = torch.where(semi_targets == 0, dist, self.eta * ((dist + self.eps) ** semi_targets.float()))
+                loss = torch.mean(losses)
+                loss.backward()
+                optimizer.step()
+                scheduler.step()
+                tepoch.set_postfix(loss=loss.item())
+                epoch_loss += loss.item()
+                self.visualizer.plot_current_errors(total_steps=(1+epoch)*n_batches, errors={"Loss": epoch_loss})
+                n_batches += 1
 
             # log epoch statistics
-            epoch_train_time = time.time() - epoch_start_time
-            logger.info(f'| Epoch: {epoch + 1:03}/{self.n_epochs:03} | Train Time: {epoch_train_time:.3f}s '
+        epoch_train_time = time.time() - epoch_start_time
+        logger.info(f'| Epoch: {epoch + 1:03}/{self.n_epochs:03} | Train Time: {epoch_train_time:.3f}s '
                         f'| Train Loss: {epoch_loss / n_batches:.6f} |')
 
         self.train_time = time.time() - start_time
         logger.info('Training Time: {:.3f}s'.format(self.train_time))
-        logger.info('Finished training.')
+        logger.info('Finished training epoch {}.'.format(str(epoch)))
 
-        return net
-
-    def test(self, dataset: BaseADDataset, net: BaseNet):
+    def test(self, dataset: BaseADDataset, net: BaseNet, epoch):
         logger = logging.getLogger()
 
         # Get test data loader
         _, test_loader = dataset.loaders(batch_size=self.batch_size, num_workers=self.n_jobs_dataloader)
-
         # Set device for network
         net = net.to(self.device)
 
@@ -156,13 +161,13 @@ class DeepSADTrainer(BaseTrainer):
         print("labels:", labels)
         print("scores:", scores)
         self.test_auc = roc_auc_score(labels, scores)
-        self.visualizer.plot_performance(epoch=1, performance=get_performance(y_trues=labels, y_preds=scores))
+        self.visualizer.plot_performance(epoch=epoch, performance=get_performance(y_trues=labels, y_preds=scores))
 
         # Log results
         logger.info('Test Loss: {:.6f}'.format(epoch_loss / n_batches))
         logger.info('Test AUC: {:.2f}%'.format(100. * self.test_auc))
         logger.info('Test Time: {:.3f}s'.format(self.test_time))
-        logger.info('Finished testing.')
+        logger.info('Finished testing epoch {}.'.format(epoch))
 
     def init_center_c(self, train_loader: DataLoader, net: BaseNet, eps=0.1):
         """Initialize hypersphere center c as the mean from an initial forward pass on the data."""
