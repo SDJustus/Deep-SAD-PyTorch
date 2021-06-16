@@ -156,8 +156,6 @@ class AETrainer(BaseTrainer):
         _, labels, scores = zip(*idx_label_score)
         labels = np.array(labels)
         scores = np.array(scores)
-        print("labels:", labels)
-        print("scores:", scores)
         self.test_auc = roc_auc_score(labels, scores)
         self.visualizer.plot_performance(epoch=epoch, performance=get_performance(y_trues=labels, y_preds=scores))
 
