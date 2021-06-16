@@ -111,7 +111,7 @@ class DeepSADTrainer(BaseTrainer):
         logger.info('Training Time: {:.3f}s'.format(self.train_time))
         logger.info('Finished training epoch {}.'.format(str(epoch)))
 
-    def test(self, dataset: BaseADDataset, net: BaseNet, epoch):
+    def test(self, dataset: BaseADDataset, net: BaseNet, epoch=None):
         logger = logging.getLogger()
 
         # Get test data loader

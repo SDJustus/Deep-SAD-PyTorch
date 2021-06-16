@@ -61,7 +61,7 @@ class AETrainer(BaseTrainer):
             n_batches = 0
             epoch_start_time = time.time()
             self.train_one_epoch(ae_net, logger, train_loader, criterion, optimizer, scheduler, start_time, epoch, n_batches, epoch_start_time, epoch_loss)
-            self.test()
+            self.test(dataset, ae_net, epoch)
         
         return ae_net
 
