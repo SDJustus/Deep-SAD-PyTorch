@@ -1,7 +1,7 @@
 import os
 
 from matplotlib import pyplot as plt
-import torch
+from torchvision import transforms
 
 
 class Visualizer():
