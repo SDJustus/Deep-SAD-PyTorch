@@ -7,7 +7,7 @@ from .vae import VariationalAutoencoder
 from .dgm import DeepGenerativeModel, StackedDeepGenerativeModel
 
 
-def build_network(net_name, ae_net=None, img_size=None):
+def build_network(net_name, ae_net=None, img_size=None, rep_dim=None):
     """Builds the neural network."""
 
     implemented_networks = ('mnist_LeNet', 'mnist_DGM_M2', 'mnist_DGM_M1M2',
@@ -44,7 +44,7 @@ def build_network(net_name, ae_net=None, img_size=None):
         net = CIFAR10_LeNet()
         
     if net_name == 'custom_LeNet':
-        net = Custom_LeNet(img_size=img_size)
+        net = Custom_LeNet(img_size=img_size, rep_dim=rep_dim)
 
     if net_name == 'cifar10_DGM_M2':
         net = DeepGenerativeModel([3*32*32, 2, 128, [512, 256]], classifier_net=CIFAR10_LeNet)
@@ -92,7 +92,7 @@ def build_network(net_name, ae_net=None, img_size=None):
     return net
 
 
-def build_autoencoder(net_name, img_size=None):
+def build_autoencoder(net_name, img_size=None, rep_dim=None):
     """Builds the corresponding autoencoder network."""
 
     implemented_networks = ('mnist_LeNet', 'mnist_DGM_M1M2',
@@ -115,7 +115,7 @@ def build_autoencoder(net_name, img_size=None):
         ae_net = FashionMNIST_LeNet_Autoencoder()
     
     if net_name == 'custom_LeNet':
-        ae_net = Custom_LeNet_Autoencoder(img_size=img_size)
+        ae_net = Custom_LeNet_Autoencoder(img_size=img_size, rep_dim=rep_dim)
 
     if net_name == 'fmnist_DGM_M1M2':
         ae_net = VariationalAutoencoder([1*28*28, 64, [256, 128]])

@@ -24,7 +24,7 @@ class DeepSAD(object):
         ae_results: A dictionary to save the autoencoder results.
     """
 
-    def __init__(self, eta: float = 1.0, img_size=256, display_freq=50):
+    def __init__(self, eta: float = 1.0, img_size=256, display_freq=50, rep_dim=None):
         """Inits DeepSAD with hyperparameter eta."""
 
         self.eta = eta
@@ -42,6 +42,7 @@ class DeepSAD(object):
         print("in deepSAD init", img_size)
         self.img_size = img_size
         self.display_freq = display_freq
+        self.rep_dim = rep_dim
 
         self.results = {
             'train_time': None,
@@ -59,7 +60,7 @@ class DeepSAD(object):
     def set_network(self, net_name):
         """Builds the neural network phi."""
         self.net_name = net_name
-        self.net = build_network(net_name, img_size=self.img_size)
+        self.net = build_network(net_name, img_size=self.img_size, rep_dim=self.rep_dim)
         print(self.img_size)
         print("here1:",self.net.img_size)
 
@@ -97,7 +98,7 @@ class DeepSAD(object):
         """Pretrains the weights for the Deep SAD network phi via autoencoder."""
 
         # Set autoencoder network
-        self.ae_net = build_autoencoder(self.net_name, img_size=img_size)
+        self.ae_net = build_autoencoder(self.net_name, img_size=img_size, rep_dim=self.rep_dim)
         print(self.ae_net)
 
         # Train
