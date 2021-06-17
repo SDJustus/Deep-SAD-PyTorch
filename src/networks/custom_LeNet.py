@@ -76,7 +76,7 @@ class Custom_LeNet_Decoder(BaseNet):
         nn.init.xavier_uniform_(self.deconv7.weight, gain=nn.init.calculate_gain('leaky_relu'))
 
     def forward(self, x):
-        x = x.view(int(x.size(0)), int(self.rep_dim / (4 * 4)), 4, 4)
+        x = x.view(int(x.size(0)), int(self.rep_dim / (8 * 8)), 8, 8)
         x = F.leaky_relu(x)
         x = self.deconv1(x)
         #x = F.interpolate(F.leaky_relu(self.bn2d1(x)), scale_factor=2)
