@@ -129,8 +129,7 @@ class Visualizer():
             images ([FloatTensor]): [Real Image, Anomaly Map, Mask (Optional)]
         """
         if denormalize:
-            MEAN = torch.tensor([0.485, 0.456, 0.406]).to(device)
-            STD = torch.tensor([0.229, 0.224, 0.225]).to(device)
-            for image in images:
-                image = image * STD[:, None, None] + MEAN[:, None, None]
+            invTrans = transforms.Compose([ transforms.Normalize(mean = [ 0., 0., 0. ], std = [ 1/0.229, 1/0.224, 1/0.225 ]),
+                                            transforms.Normalize(mean = [ -0.485, -0.456, -0.406 ], std = [ 1., 1., 1. ]), ])
+            images = invTrans(images)
         self.writer.add_images("images from {} step: ".format(str(train_or_test)), images, global_step=global_step)
