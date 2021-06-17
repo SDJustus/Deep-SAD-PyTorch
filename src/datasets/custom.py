@@ -1,6 +1,7 @@
 from typing import Any, Callable, Optional, Tuple
 from torch.utils.data import Subset
 from torchvision.datasets.folder import default_loader
+from torchvision.transforms.transforms import Normalize
 from .preprocessing import create_semisupervised_setting
 from base.base_dataset import BaseADDataset
 from torch.utils.data import DataLoader
@@ -22,8 +23,12 @@ class Custom_Dataset(BaseADDataset):
         self.normal_classes = (0,)
         self.outlier_classes = (1,)
         self.known_outlier_classes = (1,)
-            
-        transform = transforms.ToTensor()
+        
+        #TODO: check if 0.5 at everything works better
+        transform = transforms.Compose([transforms.ToTensor(), transforms.Normalize(
+        mean=[0.485, 0.456, 0.406],
+        std=[0.229, 0.224, 0.225],
+        ),])
 
         # Get train set
         self.train_set = CustomDataset(root=self.root+"/train", transform=transform)

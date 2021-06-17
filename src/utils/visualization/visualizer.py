@@ -1,6 +1,7 @@
 import os
 
 from matplotlib import pyplot as plt
+import torch
 
 
 class Visualizer():
@@ -119,7 +120,7 @@ class Visualizer():
         plot = _plot_confusion_matrix(cm, normalize=False, savefig=False)
         self.writer.add_figure("Confusion Matrix", plot, global_step=epoch)
         
-    def plot_current_images(self, images, train_or_test="train", global_step=0):
+    def plot_current_images(self, images, train_or_test="train", global_step=0, denormalize=False):
         """ Display current images.
 
         Args:
@@ -127,4 +128,9 @@ class Visualizer():
             train_or_test (["train", "test]): Determines, which phase the model is in
             images ([FloatTensor]): [Real Image, Anomaly Map, Mask (Optional)]
         """
+        if denormalize:
+            MEAN = torch.tensor([0.485, 0.456, 0.406])
+            STD = torch.tensor([0.229, 0.224, 0.225])
+            for image in images:
+                image = image * STD[:, None, None] + MEAN[:, None, None]
         self.writer.add_images("images from {} step: ".format(str(train_or_test)), images, global_step=global_step)

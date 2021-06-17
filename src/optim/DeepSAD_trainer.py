@@ -99,7 +99,7 @@ class DeepSADTrainer(BaseTrainer):
                 scheduler.step()
                 tepoch.set_postfix(loss=loss.item())
                 epoch_loss += loss.item()
-                self.visualizer.plot_current_errors(total_steps=(1+epoch)*n_batches, errors={"Loss": epoch_loss})
+                self.visualizer.plot_current_errors(total_steps=(1+epoch)*n_batches, errors={"Loss": loss.item()})
                 n_batches += 1
 
             # log epoch statistics
