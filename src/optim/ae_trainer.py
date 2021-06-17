@@ -79,8 +79,8 @@ class AETrainer(BaseTrainer):
                     # Update network parameters via backpropagation: forward + backward + optimize
                 rec = ae_net(inputs)
                 if n_batches % self.display_freq:
-                    self.visualizer.plot_current_images(inputs, train_or_test="train_ae_inputs", global_step=(1+epoch)*n_batches, denormalize=True)
-                    self.visualizer.plot_current_images(rec, train_or_test="train_ae_recs", global_step=(1+epoch)*n_batches, denormalize=True)
+                    self.visualizer.plot_current_images(inputs, train_or_test="train_ae_inputs", global_step=(1+epoch)*n_batches, denormalize=True, device=self.device)
+                    self.visualizer.plot_current_images(rec, train_or_test="train_ae_recs", global_step=(1+epoch)*n_batches, denormalize=True, device=self.device)
                         
                 rec_loss = criterion(rec, inputs)
                     
