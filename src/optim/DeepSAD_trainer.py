@@ -142,7 +142,7 @@ class DeepSADTrainer(BaseTrainer):
                     idx = idx.to(self.device)
 
                     outputs = net(inputs)
-                    print("outputs:", str(outputs))
+                    print("outputs:", str(outputs.shape))
                     dist = torch.sum((outputs - self.c) ** 2, dim=1)
                     print("dist:", str(dist))
                     print("semi_targets.float():", str(semi_targets.float()))
