@@ -1,5 +1,5 @@
 import os
-
+import numpy as np
 from matplotlib import pyplot as plt
 from torchvision import transforms
 
@@ -14,6 +14,11 @@ class Visualizer():
         from torch.utils.tensorboard import SummaryWriter
         self.writer = SummaryWriter(log_dir=os.path.join("../../tensorboard/Deep_SAD/", name))
         
+    def denormalize(img):
+        mean = np.array([0.4209137, 0.42091936, 0.42130423])
+        std = np.array([0.34266332, 0.34264612, 0.3432589])
+        img = (img * std + mean) * 255.0
+        return img.astype(np.uint8)
         
     def plot_current_errors(self, total_steps, errors):
         """Plot current errros.
