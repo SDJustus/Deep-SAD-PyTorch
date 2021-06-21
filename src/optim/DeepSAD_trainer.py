@@ -93,6 +93,9 @@ class DeepSADTrainer(BaseTrainer):
                 outputs = net(inputs)
                 dist = torch.sum((outputs - self.c) ** 2, dim=1)
                 losses = torch.where(semi_targets == 0, dist, self.eta * ((dist + self.eps) ** semi_targets.float()))
+                #losses = torch.where(semi_targets == 0,
+                #                     dist,
+                #                     self.eta * ((dist + self.eps) ** (- semi_targets).float()))'
                 loss = torch.mean(losses)
                 loss.backward()
                 optimizer.step()
@@ -139,6 +142,7 @@ class DeepSADTrainer(BaseTrainer):
                     idx = idx.to(self.device)
 
                     outputs = net(inputs)
+                    print("outputs:", str(outputs))
                     dist = torch.sum((outputs - self.c) ** 2, dim=1)
                     print("dist:", str(dist))
                     print("semi_targets.float():", str(semi_targets.float()))
