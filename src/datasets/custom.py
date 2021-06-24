@@ -31,7 +31,7 @@ class Custom_Dataset(BaseADDataset):
         #std=[0.229, 0.224, 0.225],
         #),
                                        ])
-        target_transform = transforms.Lambda(lambda x: -1 if x == 1 else 1)
+        target_transform = transforms.Lambda(lambda x: -1 if x == 1 else 1 if x==0 else None)
 
         # Get train set
         self.train_set = CustomDataset(root=self.root+"/train", transform=transform, target_transform=target_transform)
@@ -82,11 +82,14 @@ class CustomDataset(DatasetFolder):
             tuple: (sample, target, semi_target, index) where target is class_index of the target class.
         """
         path, target = self.imgs[index]
+        semi_t = self.semi_targets[index]
         img = self.loader(path)
         if self.transform is not None:
             img = self.transform(img)
         if self.target_transform is not None:
-            target = self.target_transform(target)
+            print("before:",str(semi_t))
+            semi_t = self.target_transform(semi_t)
+            print("after:",str(semi_t))
 
         return img, target, self.semi_targets[index], index
 
