@@ -87,9 +87,7 @@ class CustomDataset(DatasetFolder):
         if self.transform is not None:
             img = self.transform(img)
         if self.target_transform is not None:
-            print("before:",str(semi_t))
             semi_t = self.target_transform(semi_t)
-            print("after:",str(semi_t))
 
         return img, target, self.semi_targets[index], index
 
