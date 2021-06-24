@@ -29,9 +29,10 @@ class Custom_Dataset(BaseADDataset):
         mean=[0.485, 0.456, 0.406],
         std=[0.229, 0.224, 0.225],
         ),])
+        target_transform = transforms.Lambda(lambda x: -1 if x == 1 else 1)
 
         # Get train set
-        self.train_set = CustomDataset(root=self.root+"/train", transform=transform)
+        self.train_set = CustomDataset(root=self.root+"/train", transform=transform, target_transform=target_transform)
         # Create semi-supervised setting
         #idx, _, semi_targets = create_semisupervised_setting(np.array(train_set.targets), self.normal_classes,
         #                                                     self.outlier_classes, self.known_outlier_classes,
@@ -43,7 +44,7 @@ class Custom_Dataset(BaseADDataset):
         
 
         # Get test set
-        self.test_set = CustomDataset(root=self.root+"/test", transform=transform)
+        self.test_set = CustomDataset(root=self.root+"/test", transform=transform, target_transform=target_transform)
         
     def loaders(self, batch_size: int, shuffle_train=True, shuffle_test=False, num_workers: int = 0) -> (DataLoader, DataLoader):
         train_loader = DataLoader(dataset=self.train_set, batch_size=batch_size, shuffle=shuffle_train,
