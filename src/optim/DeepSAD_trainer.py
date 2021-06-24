@@ -134,22 +134,14 @@ class DeepSADTrainer(BaseTrainer):
                 for data in tepoch:
                     tepoch.set_description("Testing")
                     inputs, labels, semi_targets, idx = data
-                    print("labels:", str(labels))
-                    print("semi_targets:", str(semi_targets))
                     inputs = inputs.to(self.device)
                     labels = labels.to(self.device)
                     semi_targets = semi_targets.to(self.device)
                     idx = idx.to(self.device)
 
                     outputs = net(inputs)
-                    print("outputs:", str(outputs.shape))
                     dist = torch.sum((outputs - self.c) ** 2, dim=1)
-                    print("dist:", str(dist))
-                    print("semi_targets.float():", str(semi_targets.float()))
-                    print("self.eps:", str(self.eps))
-                    print("self.eta:", str(self.eta))
                     losses = torch.where(semi_targets == 0, dist, self.eta * ((dist + self.eps) ** semi_targets.float()))
-                    print("losses:", str(losses))
                     loss = torch.mean(losses)
                     scores = dist
 
@@ -157,7 +149,6 @@ class DeepSADTrainer(BaseTrainer):
                     idx_label_score += list(zip(idx.cpu().data.numpy().tolist(),
                                                 labels.cpu().data.numpy().tolist(),
                                                 scores.cpu().data.numpy().tolist()))
-                    print("idx_label_score:", str(idx_label_score))
 
                     epoch_loss += loss.item()
                     n_batches += 1
