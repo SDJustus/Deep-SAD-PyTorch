@@ -89,7 +89,7 @@ class CustomDataset(DatasetFolder):
         if self.target_transform is not None:
             semi_t = self.target_transform(semi_t)
 
-        return img, target, self.semi_targets[index], index
+        return img, target, semi_t, index
 
 
     def __len__(self) -> int:
