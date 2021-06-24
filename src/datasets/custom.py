@@ -25,10 +25,12 @@ class Custom_Dataset(BaseADDataset):
         self.known_outlier_classes = (1,)
         
         #TODO: check if 0.5 at everything works better
-        transform = transforms.Compose([transforms.ToTensor(), transforms.Normalize(
-        mean=[0.485, 0.456, 0.406],
-        std=[0.229, 0.224, 0.225],
-        ),])
+        transform = transforms.Compose([transforms.ToTensor(), 
+                                        #transforms.Normalize(
+        #mean=[0.485, 0.456, 0.406],
+        #std=[0.229, 0.224, 0.225],
+        #),
+                                       ])
         target_transform = transforms.Lambda(lambda x: -1 if x == 1 else 1)
 
         # Get train set
