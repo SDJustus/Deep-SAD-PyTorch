@@ -215,7 +215,7 @@ def main(dataset_name, net_name, xp_path, data_path, load_config, load_model, et
 
     # Save results, model, and configuration
     deepSAD.save_results(export_json=xp_path + '/results.json')
-    deepSAD.save_model(export_model=xp_path + '/model.tar')
+    deepSAD.save_model(export_model=xp_path + '/model.tar', save_ae=pretrain)
     cfg.save_config(export_json=xp_path + '/config.json')
 
     # Plot most anomalous and most normal test samples
